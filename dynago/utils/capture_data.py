@@ -15,14 +15,6 @@ def capture():
         results = hands.process(frame)
         if results.multi_hand_landmarks:
             for landmarks in results.multi_hand_landmarks:
-                # handedness = (
-                #     results.multi_handedness[
-                #         results.multi_hand_landmarks.index(landmarks)
-                #     ]
-                #     .classification[0]
-                #     .label
-                # )
-
                 mediapipe_drawing.draw_landmarks(
                     frame, landmarks, mediapipe_hands.HAND_CONNECTIONS
                 )
