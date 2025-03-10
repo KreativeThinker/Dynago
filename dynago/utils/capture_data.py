@@ -1,30 +1,71 @@
 import cv2
-import mediapipe
+import mediapipe as mp
+import numpy as np
+import csv
+import os
+
+# Constants
+# Initialize Mediapipe
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands()
+mp_drawing = mp.solutions.drawing_utils
+
+
+def save_landmark_data(landmarks, gesture_name, csv_path="dynago/data/raw.csv"):
+    """Save flattened landmarks + gesture name to CSV."""
+    data = np.array(landmarks).flatten().tolist()
+    data.append(gesture_name)
+
+    file_exists = os.path.isfile(csv_path)
+
+    with open(csv_path, mode="a") as f:
+        writer = csv.writer(f)
+
+        if not file_exists:
+            header = [f"x{i+1}, y{i+1}, z{i+1}" for i in range(21)] + ["gesture"]
+            writer.writerow(header)
+
+        writer.writerow(data)
+
+    print(f"✅ Saved '{gesture_name}' to {csv_path}")
 
 
 def capture():
-    mediapipe_hands = mediapipe.solutions.hands
-    hands = mediapipe_hands.Hands()
-    mediapipe_drawing = mediapipe.solutions.drawing_utils
+    gesture_name = input("Enter gesture name: ").strip()
 
-    capture = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)
+    print("📷 Press SPACE to capture landmarks, 'q' to quit.")
 
-    while capture.isOpened():
-        _, frame = capture.read()
-        frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
-        results = hands.process(frame)
+    while cap.isOpened():
+        success, frame = cap.read()
+        if not success:
+            continue
+
+        frame = cv2.flip(frame, 1)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        results = hands.process(rgb_frame)
+
         if results.multi_hand_landmarks:
             for landmarks in results.multi_hand_landmarks:
-                mediapipe_drawing.draw_landmarks(
-                    frame, landmarks, mediapipe_hands.HAND_CONNECTIONS
-                )
+                mp_drawing.draw_landmarks(frame, landmarks, mp_hands.HAND_CONNECTIONS)
 
         cv2.imshow("Gesture Recognition", frame)
 
-        if cv2.waitKey(10) & 0xFF == ord("q"):
+        key = cv2.waitKey(1)
+        if key == 32:
+            if results.multi_hand_landmarks:
+                for landmarks in results.multi_hand_landmarks:
+                    save_landmark_data(
+                        [(lm.x, lm.y, lm.z) for lm in landmarks.landmark], gesture_name
+                    )
+            else:
+                print("❌ No hand detected!")
+
+        if key & 0xFF == ord("q"):  # Quit
             break
 
-    capture.release()
+    cap.release()
     cv2.destroyAllWindows()
 
 
