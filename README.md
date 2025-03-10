@@ -1,11 +1,11 @@
-# dynago
+# Dynago
 
 Dynamic and Natural Gesture Operations
 
 # Installation:
 
 ```bash
-git Clone https://github.com/KreativeThinker/dynago Dynago
+git Clone https://github.com/KreativeThinker/Dynago
 
 cd Dynago
 ```
