@@ -2,7 +2,7 @@ import cv2
 import mediapipe
 
 
-def capture_data():
+def capture():
     mediapipe_hands = mediapipe.solutions.hands
     hands = mediapipe_hands.Hands()
     mediapipe_drawing = mediapipe.solutions.drawing_utils
@@ -37,4 +37,4 @@ def capture_data():
 
 
 if __name__ == "__main__":
-    capture_data()
+    capture()
