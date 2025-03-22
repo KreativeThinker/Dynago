@@ -3,6 +3,7 @@
   "1": { "name": "open palm", "landmarks": [0, 4, 8, 12, 16, 20] },
   "2": { "name": "two_fingers", "landmarks": [8, 12] },
   "3": { "name": "three_fingers_1", "landmarks": [8, 12, 16] },
-  "4": { "name": "pinch", "landmarks": [4, 8] },
-  "5": { "name": "point", "landmarks": [0, 8] }
+  "4": { "name": "three_fingers_2", "landmarks": [12, 16, 20] },
+  "5": { "name": "pinch", "landmarks": [4, 8] },
+  "6": { "name": "point", "landmarks": [0, 8] }
 }
