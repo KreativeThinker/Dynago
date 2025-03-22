@@ -1,8 +1,8 @@
 {
-  "0": "fist",
-  "1": "open palm",
-  "2": "two fingers",
-  "3": "three fingers",
-  "4": "pinch",
-  "5": "point"
+  "0": { "name": "fist", "landmarks": [0] },
+  "1": { "name": "open palm", "landmarks": [0, 4, 8, 12, 16, 20] },
+  "2": { "name": "two_fingers", "landmarks": [8, 12] },
+  "3": { "name": "three_fingers_1", "landmarks": [8, 12, 16] },
+  "4": { "name": "pinch", "landmarks": [4, 8] },
+  "5": { "name": "point", "landmarks": [0, 8] }
 }
