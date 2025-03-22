@@ -3,35 +3,64 @@ import mediapipe as mp
 import numpy as np
 import csv
 import os
+import json
 
 # Constants
+GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
+CSV_PATH = "dynago/data/raw.csv"
+
 # Initialize Mediapipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_drawing = mp.solutions.drawing_utils
 
 
-def save_landmark_data(landmarks, gesture_name, csv_path="dynago/data/raw.csv"):
-    """Save flattened landmarks + gesture name to CSV."""
+def load_gesture_map():
+    """Load gesture mapping from JSON file."""
+    if not os.path.exists(GESTURE_MAP_PATH):
+        print("❌ Gesture mapping file not found!")
+        return {}
+
+    with open(GESTURE_MAP_PATH, "r") as f:
+        return json.load(f)
+
+
+def save_landmark_data(landmarks, gesture_index):
+    """Save flattened landmarks + gesture index to CSV."""
     data = np.array(landmarks).flatten().tolist()
-    data.append(gesture_name)
+    data.append(gesture_index)
 
-    file_exists = os.path.isfile(csv_path)
+    file_exists = os.path.isfile(CSV_PATH)
 
-    with open(csv_path, mode="a") as f:
+    with open(CSV_PATH, mode="a") as f:
         writer = csv.writer(f)
 
         if not file_exists:
-            header = [f"x{i+1}, y{i+1}, z{i+1}" for i in range(21)] + ["gesture"]
+            header = [f"x{i+1}, y{i+1}, z{i+1}" for i in range(21)] + ["gesture_index"]
             writer.writerow(header)
 
         writer.writerow(data)
 
-    print(f"✅ Saved '{gesture_name}' to {csv_path}")
+    print(f"✅ Saved gesture index '{gesture_index}' to {CSV_PATH}")
 
 
 def capture():
-    gesture_name = input("Enter gesture name: ").strip()
+    """Capture hand landmarks and store them with a gesture index."""
+    gesture_map = load_gesture_map()
+    if not gesture_map:
+        return
+
+    # Print available gesture mappings
+    print("\n📌 Available Gestures:")
+    for idx, name in gesture_map.items():
+        print(f"  {idx}: {name}")
+
+    # Take gesture index input
+    gesture_index = input("\nEnter the gesture index: ").strip()
+
+    if gesture_index not in gesture_map:
+        print("❌ Invalid gesture index!")
+        return
 
     cap = cv2.VideoCapture(0)
     print("📷 Press SPACE to capture landmarks, 'q' to quit.")
@@ -53,11 +82,11 @@ def capture():
         cv2.imshow("Gesture Recognition", frame)
 
         key = cv2.waitKey(1)
-        if key == 32:
+        if key == 32:  # SPACE key to capture
             if results.multi_hand_landmarks:
                 for landmarks in results.multi_hand_landmarks:
                     save_landmark_data(
-                        [(lm.x, lm.y, lm.z) for lm in landmarks.landmark], gesture_name
+                        [(lm.x, lm.y, lm.z) for lm in landmarks.landmark], gesture_index
                     )
             else:
                 print("❌ No hand detected!")
