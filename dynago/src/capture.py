@@ -9,8 +9,8 @@ import time
 
 MODEL_PATH = "dynago/models/gesture_svm.pkl"
 GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
-N_FRAMES = 10  # Static gesture classification every N frames
-VEL_THRESHOLD = 0.05  # Minimum movement for swipe detection
+N_FRAMES = 6  # Static gesture classification every N frames
+VEL_THRESHOLD = 0.25  # Minimum movement for swipe detection
 DISPLAY_TIME = 1  # Seconds to display swipe direction
 
 # Load gesture mapping from JSON and convert keys to int
