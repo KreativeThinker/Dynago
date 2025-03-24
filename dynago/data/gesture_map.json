@@ -3,7 +3,7 @@
   "1": {
     "name": "open palm",
     "landmarks": [0, 4, 8, 12, 16, 20],
-    "function": [1, 1, 0, 0]
+    "function": [1, 1, 9, 9]
   },
   "2": {
     "name": "two_fingers",

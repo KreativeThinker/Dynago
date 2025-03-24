@@ -24,6 +24,11 @@ def scroll(direction):
     # 6 = Scroll Left, 7 = Scroll Right, 4 = Scroll Up, 5 = Scroll Down
 
 
+def page_scroll(direction):
+    cmds = ["xdotool key Page_Up", "xdotool key Page_Down"]
+    os.system(cmds[direction - 2])
+
+
 def adjust_volume(direction):
     os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {['-5%', '+5%'][direction-2]}")
 
@@ -44,6 +49,7 @@ FUNCTION_MAP = {
     4: adjust_brightness,
     5: lambda direction: print(f"Cursor select {direction}"),
     6: lambda direction: print(f"Drawing {direction}"),
+    9: page_scroll,
 }
 
 
