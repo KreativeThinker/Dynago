@@ -69,10 +69,6 @@ poetry install
 
 ---
 
-## 🤝 Contributing
-We welcome contributions! Feel free to **fork** this repository, create a new **branch**, and submit a **pull request** with improvements.  
-
----
 
 ## 📜 License
 Dynago is **open-source** and available under the **MIT License**.  
