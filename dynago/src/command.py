@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 
 # Load gesture map globally
 GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
@@ -59,8 +60,7 @@ def execute_command(gesture_id, direction):
         return
 
     function_id = GESTURE_MAP[gesture_id]["function"][direction]
-
-    if function_id == 0:
+    if function_id is None or function_id == 0:
         print(
             f"No function assigned for {direction} swipe with {GESTURE_MAP[gesture_id]['name']}"
         )
@@ -70,8 +70,8 @@ def execute_command(gesture_id, direction):
         f"Executing function {function_id} for {GESTURE_MAP[gesture_id]['name']} ({direction} swipe)"
     )
 
-    # Call the mapped function
+    # Run the function in a separate thread to avoid blocking
     if function_id in FUNCTION_MAP:
-        FUNCTION_MAP[function_id](direction)
+        threading.Thread(target=FUNCTION_MAP[function_id], args=(direction,)).start()
     else:
         print(f"Function {function_id} not defined!")
