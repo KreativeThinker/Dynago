@@ -66,7 +66,6 @@ def execute_command(gesture_id, direction):
         f"Executing function {function_id} for {GESTURE_MAP[gesture_id]['name']} ({direction} swipe)"
     )
 
-    # Run the function in a separate thread to avoid blocking
     if function_id in FUNCTION_MAP:
         threading.Thread(target=FUNCTION_MAP[function_id], args=(direction,)).start()
     else:
