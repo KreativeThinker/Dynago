@@ -23,11 +23,10 @@ def calculate_swipe_direction():
     if magnitude < VEL_THRESHOLD:
         return None  # Movement too small
     angle = math.degrees(math.atan2(dy, dx))
-    if -30 <= angle <= 30:
-        return 1
-    elif 150 <= angle <= 180 or -180 <= angle <= -150:
-        print(f"Swipe direction detected: {angle} → 0")  # Debug
+    if 150 <= angle <= 180 or -180 <= angle <= -150:
         return 0
+    elif -30 <= angle <= 30:
+        return 1
     elif 60 < angle < 120:
         return 2
     elif -120 < angle < -60:
