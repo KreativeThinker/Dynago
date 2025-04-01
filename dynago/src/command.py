@@ -1,12 +1,8 @@
 import os
-import json
 import threading
+from dynago.config import GESTURE_MAP
 
 # Load gesture map globally
-GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
-with open(GESTURE_MAP_PATH, "r") as f:
-    GESTURE_MAP = json.load(f)
-    GESTURE_MAP = {int(k): v for k, v in GESTURE_MAP.items()}
 
 
 def move_workspace(direction):

@@ -3,26 +3,15 @@ import mediapipe as mp
 import numpy as np
 import csv
 import os
-import json
+from dynago.config import GESTURE_MAP
 
 # Constants
-GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
 CSV_PATH = "dynago/data/raw.csv"
 
 # Initialize Mediapipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_drawing = mp.solutions.drawing_utils
-
-
-def load_gesture_map():
-    """Load gesture mapping from JSON file."""
-    if not os.path.exists(GESTURE_MAP_PATH):
-        print("❌ Gesture mapping file not found!")
-        return {}
-
-    with open(GESTURE_MAP_PATH, "r") as f:
-        return json.load(f)
 
 
 def save_landmark_data(landmarks, gesture_index):
@@ -46,7 +35,7 @@ def save_landmark_data(landmarks, gesture_index):
 
 def capture():
     """Capture hand landmarks and store them with a gesture index."""
-    gesture_map = load_gesture_map()
+    gesture_map = GESTURE_MAP
     if not gesture_map:
         return
 

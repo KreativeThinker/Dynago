@@ -2,11 +2,10 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import joblib
-import json
 import time
 import pyautogui
 from pynput.mouse import Controller as MouseController
-from dynago.config import N_FRAMES
+from dynago.config import N_FRAMES, GESTURE_MAP
 from dynago.src.swipe import (
     get_tracking_point,
     calculate_swipe_direction,
@@ -15,15 +14,11 @@ from dynago.src.swipe import (
 from dynago.src.command import execute_command
 
 MODEL_PATH = "dynago/models/gesture_svm.pkl"
-GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_drawing = mp.solutions.drawing_utils
 
-with open(GESTURE_MAP_PATH, "r") as f:
-    gesture_map = json.load(f)
-    gesture_map = {int(k): v for k, v in gesture_map.items()}
 
 BUFFER_SIZE = 10
 gesture_buffer = []
@@ -104,7 +99,7 @@ def capture_landmarks():
                     gesture = predict_gesture(norm_landmarks)
                     if gesture == 6:
                         current_gesture_id = 6
-                        current_static_gesture = gesture_map.get(6, {}).get(
+                        current_static_gesture = GESTURE_MAP.get(6, {}).get(
                             "name", "point"
                         )
                         # Use index finger tip (landmark 8) as pointer reference
@@ -130,7 +125,7 @@ def capture_landmarks():
                             current_gesture_id = None
                         else:
                             current_gesture_id = new_gesture
-                            mapping = gesture_map.get(int(new_gesture), {})
+                            mapping = GESTURE_MAP.get(int(new_gesture), {})
                             current_static_gesture = mapping.get("name", "Unknown")
                             current_tracking_indices = mapping.get("landmarks", [0])
                             print(f'Detected: "{current_static_gesture}"', flush=True)

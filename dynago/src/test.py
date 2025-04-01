@@ -4,19 +4,14 @@ import numpy as np
 import joblib
 import collections
 import math
-import json
 import time
+from dynago.config import GESTURE_MAP
 
 MODEL_PATH = "dynago/models/gesture_svm.pkl"
-GESTURE_MAP_PATH = "dynago/data/gesture_map.json"
 N_FRAMES = 6  # Static gesture classification every N frames
 VEL_THRESHOLD = 0.25  # Minimum movement for swipe detection
 DISPLAY_TIME = 1  # Seconds to display swipe direction
 
-# Load gesture mapping from JSON and convert keys to int
-with open(GESTURE_MAP_PATH, "r") as f:
-    gesture_map = json.load(f)
-    gesture_map = {int(k): v for k, v in gesture_map.items()}
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
@@ -123,7 +118,7 @@ def test():
                         tracking_motion = False
                     else:
                         # Use gesture mapping to get the tracking indices
-                        mapping = gesture_map.get(int(gesture), None)
+                        mapping = GESTURE_MAP.get(int(gesture), None)
                         if mapping:
                             current_static_gesture = mapping.get("name", "Unknown")
                             current_tracking_indices = mapping.get("landmarks", [0])
@@ -171,4 +166,4 @@ def test():
 
 
 if __name__ == "__main__":
-    capture_landmarks()
+    test()
