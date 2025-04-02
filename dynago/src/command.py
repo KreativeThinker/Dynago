@@ -2,8 +2,6 @@ import os
 import threading
 from dynago.config import GESTURE_MAP
 
-# Load gesture map globally
-
 
 def move_workspace(direction):
     os.system(f"bspc desktop --focus -f {['next', 'prev'][direction]}")
@@ -38,6 +36,10 @@ def toggle_scratchpad(_):
     os.system("staticpad 0")  # Custom scratchpad script
 
 
+def pinch(direction):
+    os.system(f"xdotool key ctrl+{'plus' if direction == 1 else 'minus'}")
+
+
 # Define a function mapping
 FUNCTION_MAP = {
     1: move_workspace,
@@ -46,6 +48,7 @@ FUNCTION_MAP = {
     4: adjust_brightness,
     5: lambda direction: print(f"Cursor select {direction}"),
     6: lambda direction: print(f"Drawing {direction}"),
+    7: pinch,
     9: page_scroll,
 }
 
