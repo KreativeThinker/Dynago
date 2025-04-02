@@ -2,9 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import joblib
-import pyautogui
 import multiprocessing as mp_proc
-from pynput.mouse import Controller as MouseController
+from dynago.src.mouse import GestureMouse
 from dynago.config import N_FRAMES, GESTURE_MAP
 from dynago.src.swipe import (
     get_tracking_point,
@@ -19,13 +18,6 @@ mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
 BUFFER_SIZE = 10
-screen_width, screen_height = pyautogui.size()
-
-
-def init_worker():
-    """Initialize worker-specific resources"""
-    global mouse
-    mouse = MouseController()
 
 
 def normalize_landmarks(landmarks):
@@ -44,7 +36,7 @@ def predict_gesture(input_data, model):
     return prediction[0]
 
 
-def process_frame(frame, hands, model, state):
+def process_frame(frame, hands, model, state, mouse_controller, in_mouse_mode):
     """Process a single frame and return results"""
     frame = cv2.flip(frame, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -54,7 +46,6 @@ def process_frame(frame, hands, model, state):
         "frame": frame,
         "results": results,
         "command": None,
-        "mouse_pos": None,
         "gesture_name": None,
     }
 
@@ -69,23 +60,19 @@ def process_frame(frame, hands, model, state):
             # Predict gesture
             gesture = predict_gesture(norm_landmarks, model)
 
-            # Handle point gesture (direct mouse control)
             if gesture == 6:
                 output["gesture_name"] = GESTURE_MAP.get(6, {}).get("name", "point")
-                point = raw_landmarks[8][:2]  # index finger tip
-                smoothed = update_smoothed_position(point, state["smoothed_position"])
-                mouse_x = int(smoothed[0] * screen_width)
-                mouse_y = int(smoothed[1] * screen_height)
-                output["mouse_pos"] = (mouse_x, mouse_y)
-                state["tracking_motion"] = False
-                return output
-
-            # Handle other gestures
-            if state["frame_count"] % N_FRAMES == 0:
-                if not state["tracking_motion"]:
-                    if gesture == 0:
+                output["in_mouse_mode"] = True
+                finger_tip_pos = raw_landmarks[8][:2]  # index finger tip (x,y)
+                mouse_controller.update(finger_tip_pos)
+                return output  # Handle gestures
+            elif not state["tracking_motion"]:
+                # When not tracking motion, check for new gestures every N frames
+                if state["frame_count"] % N_FRAMES == 0:
+                    if gesture == 0:  # No gesture detected
                         state["current_gesture_id"] = None
                     else:
+                        # New gesture detected
                         state["current_gesture_id"] = gesture
                         mapping = GESTURE_MAP.get(int(gesture), {})
                         output["gesture_name"] = mapping.get("name", "Unknown")
@@ -96,40 +83,38 @@ def process_frame(frame, hands, model, state):
                             raw_landmarks, state["tracking_indices"]
                         )
                         landmark_history.append(tracking_point)
+            else:
+                # When tracking motion, process every frame (bypass N_FRAMES filter)
+                if gesture != state["current_gesture_id"]:
+                    # Gesture changed while tracking
+                    state["tracking_motion"] = False
+                    state["current_gesture_id"] = None
+                    state["tracking_indices"] = None
+                    landmark_history.clear()
                 else:
-                    if gesture != state["current_gesture_id"]:
+                    # Continue tracking same gesture
+                    tracking_point = get_tracking_point(
+                        raw_landmarks, state["tracking_indices"]
+                    )
+                    landmark_history.append(tracking_point)
+                    swipe = calculate_swipe_direction()
+                    if swipe is not None:
+                        # Swipe detected
+                        output["command"] = (state["current_gesture_id"], swipe)
                         state["tracking_motion"] = False
                         state["current_gesture_id"] = None
                         state["tracking_indices"] = None
                         landmark_history.clear()
-                    else:
-                        tracking_point = get_tracking_point(
-                            raw_landmarks, state["tracking_indices"]
-                        )
-                        landmark_history.append(tracking_point)
-                        swipe = calculate_swipe_direction()
-                        if swipe is not None:
-                            output["command"] = (state["current_gesture_id"], swipe)
-                            state["tracking_motion"] = False
-                            state["current_gesture_id"] = None
-                            state["tracking_indices"] = None
-                            landmark_history.clear()
 
+    output["in_mouse_mode"] = False
     return output
-
-
-def update_smoothed_position(new_position, prev_position, speed_factor=1.0):
-    adaptive_alpha = min(0.1 + 0.3 * speed_factor, 0.5)
-    if prev_position is None:
-        return new_position
-    return adaptive_alpha * np.array(new_position) + (1 - adaptive_alpha) * np.array(
-        prev_position
-    )
 
 
 def capture_landmarks(cmd_queue):
     """Main capture process with improved resource management"""
     cap = cv2.VideoCapture(0)
+    mouse_controller = GestureMouse()
+    in_mouse_mode = False  # Track if we're in mouse control mode
 
     # Initialize state dictionary
     state = {
@@ -137,7 +122,6 @@ def capture_landmarks(cmd_queue):
         "tracking_motion": False,
         "tracking_indices": None,
         "current_gesture_id": None,
-        "smoothed_position": None,
     }
 
     # Load model once at start
@@ -156,27 +140,23 @@ def capture_landmarks(cmd_queue):
             if not success:
                 continue
 
-            # Process frame
-            result = process_frame(frame, hands, model, state)
+            # Process frame - now passing mouse_controller and in_mouse_mode
+            result = process_frame(
+                frame, hands, model, state, mouse_controller, in_mouse_mode
+            )
+            in_mouse_mode = result["in_mouse_mode"]
 
-            # Handle results
-            if result["mouse_pos"] is not None:
-                mouse.position = result["mouse_pos"]
-
-            if result["command"] is not None:
+            # Skip command processing if in mouse mode
+            if not in_mouse_mode and result["command"] is not None:
                 cmd_queue.put(result["command"])
-
-            # Update smoothed position if we have mouse movement
-            if result["mouse_pos"] is not None:
-                state["smoothed_position"] = update_smoothed_position(
-                    result["mouse_pos"], state["smoothed_position"]
-                )
 
             # Update frame count
             state["frame_count"] += 1
 
             # Display frame
             cv2.imshow("Gesture Recognition", result["frame"])
+            # cv2.moveWindow("Gesture Recognition", 100, 100)  # Set position
+            # cv2.resizeWindow("Gesture Recognition", 32, 18)  # Set dimensions
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
@@ -185,8 +165,7 @@ def capture_landmarks(cmd_queue):
 
 
 def command_worker(cmd_queue):
-    """Command processing worker with initialization"""
-    init_worker()
+    """Command processing worker"""
     while True:
         command = cmd_queue.get()
         if command is None:  # Sentinel value to stop
@@ -211,13 +190,13 @@ if __name__ == "__main__":
         )
         worker.start()
 
-        # Run capture in main process (avoids issues with OpenCV in child processes)
+        # Run capture in main process
         capture_landmarks(cmd_queue)
 
     finally:
         # Cleanup
-        cmd_queue.put(None)  # Signal worker to stop
-        worker.join(timeout=1)  # Wait for worker to finish
+        cmd_queue.put(None)
+        worker.join(timeout=1)
         if worker.is_alive():
-            worker.terminate()  # Force terminate if needed
-        cmd_queue.close()  # Clean up queue
+            worker.terminate()
+        cmd_queue.close()
