@@ -8,6 +8,7 @@ from dynago.config import N_FRAMES, GESTURE_MAP, ENABLE_MOUSE
 from dynago.src.swipe import (
     get_tracking_point,
     calculate_swipe_direction,
+    mean_landmark_history,
     landmark_history,
 )
 from dynago.src.command import execute_command
@@ -78,11 +79,12 @@ def process_frame(frame, hands, model, state, mouse_controller):
                         output["gesture_name"] = mapping.get("name", "Unknown")
                         state["tracking_indices"] = mapping.get("landmarks", [0])
                         state["tracking_motion"] = True
+                        mean_landmark_history.clear()
                         landmark_history.clear()
                         tracking_point = get_tracking_point(
                             raw_landmarks, state["tracking_indices"]
                         )
-                        landmark_history.append(tracking_point)
+                        mean_landmark_history.append(tracking_point)
             else:
                 # When tracking motion, process every frame (bypass N_FRAMES filter)
                 if gesture != state["current_gesture_id"]:
@@ -90,13 +92,14 @@ def process_frame(frame, hands, model, state, mouse_controller):
                     state["tracking_motion"] = False
                     state["current_gesture_id"] = None
                     state["tracking_indices"] = None
+                    mean_landmark_history.clear()
                     landmark_history.clear()
                 else:
                     # Continue tracking same gesture
                     tracking_point = get_tracking_point(
                         raw_landmarks, state["tracking_indices"]
                     )
-                    landmark_history.append(tracking_point)
+                    mean_landmark_history.append(tracking_point)
                     swipe = calculate_swipe_direction()
                     if swipe is not None:
                         # Swipe detected
@@ -104,6 +107,7 @@ def process_frame(frame, hands, model, state, mouse_controller):
                         state["tracking_motion"] = False
                         state["current_gesture_id"] = None
                         state["tracking_indices"] = None
+                        mean_landmark_history.clear()
                         landmark_history.clear()
 
     output["in_mouse_mode"] = False
