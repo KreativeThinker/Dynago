@@ -45,7 +45,7 @@ def capture():
         print(f"  {idx}: {name}")
 
     # Take gesture index input
-    gesture_index = input("\nEnter the gesture index: ").strip()
+    gesture_index = int(input("\nEnter the gesture index: ").strip())
 
     if gesture_index not in gesture_map:
         print("❌ Invalid gesture index!")
