@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 import multiprocessing as mp_proc
 from dynago.src.mouse import GestureMouse
-from dynago.config import N_FRAMES, GESTURE_MAP
+from dynago.config import N_FRAMES, GESTURE_MAP, ENABLE_MOUSE
 from dynago.src.swipe import (
     get_tracking_point,
     calculate_swipe_direction,
@@ -36,7 +36,7 @@ def predict_gesture(input_data, model):
     return prediction[0]
 
 
-def process_frame(frame, hands, model, state, mouse_controller, in_mouse_mode):
+def process_frame(frame, hands, model, state, mouse_controller):
     """Process a single frame and return results"""
     frame = cv2.flip(frame, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -60,7 +60,7 @@ def process_frame(frame, hands, model, state, mouse_controller, in_mouse_mode):
             # Predict gesture
             gesture = predict_gesture(norm_landmarks, model)
 
-            if gesture == 6:
+            if gesture == 6 and ENABLE_MOUSE:
                 output["gesture_name"] = GESTURE_MAP.get(6, {}).get("name", "point")
                 output["in_mouse_mode"] = True
                 finger_tip_pos = raw_landmarks[8][:2]  # index finger tip (x,y)
@@ -141,9 +141,7 @@ def capture_landmarks(cmd_queue):
                 continue
 
             # Process frame - now passing mouse_controller and in_mouse_mode
-            result = process_frame(
-                frame, hands, model, state, mouse_controller, in_mouse_mode
-            )
+            result = process_frame(frame, hands, model, state, mouse_controller)
             in_mouse_mode = result["in_mouse_mode"]
 
             # Skip command processing if in mouse mode
