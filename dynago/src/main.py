@@ -1,6 +1,6 @@
 import multiprocessing
 
-from dynago.src.capture import capture_landmarks, command_worker
+from dynago.src.capture import capture_landmarks, command_worker, cleanup
 
 
 def main():
@@ -21,6 +21,7 @@ def main():
 
     finally:
         # Cleanup
+        cleanup()
         cmd_queue.put(None)  # Signal worker to stop
         worker.join(timeout=1)  # Wait for worker to finish
         if worker.is_alive():

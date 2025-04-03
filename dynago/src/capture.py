@@ -10,6 +10,7 @@ from dynago.src.swipe import (
     calculate_swipe_direction,
     mean_landmark_history,
     landmark_history,
+    cleanup,
 )
 from dynago.src.command import execute_command
 
@@ -100,7 +101,7 @@ def process_frame(frame, hands, model, state, mouse_controller):
                         raw_landmarks, state["tracking_indices"]
                     )
                     mean_landmark_history.append(tracking_point)
-                    swipe = calculate_swipe_direction()
+                    swipe = calculate_swipe_direction(gesture)
                     if swipe is not None:
                         # Swipe detected
                         output["command"] = (state["current_gesture_id"], swipe)
@@ -197,6 +198,7 @@ if __name__ == "__main__":
 
     finally:
         # Cleanup
+        cleanup()
         cmd_queue.put(None)
         worker.join(timeout=1)
         if worker.is_alive():
