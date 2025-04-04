@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import joblib
-import multiprocessing as mp_proc
+import multiprocessing
 from dynago.src.mouse import GestureMouse
 from dynago.config import N_FRAMES, GESTURE_MAP, ENABLE_MOUSE
 from dynago.src.swipe import (
@@ -179,7 +179,7 @@ def command_worker(cmd_queue):
 
 if __name__ == "__main__":
     # Use spawn context for better compatibility
-    mp = mp_proc.get_context("spawn")
+    mp = multiprocessing.get_context("spawn")
 
     # Create command queue
     cmd_queue = mp.Queue(maxsize=10)  # Prevent queue from growing too large
