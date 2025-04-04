@@ -23,7 +23,7 @@ class VoiceControl:
         self.voice_queue = voice_queue
         self.llm_queue = llm_queue
         self.sample_rate = 16000
-        self.recording_duration = 3  # seconds
+        self.recording_duration = 4  # seconds
         self.ollama_model = "gemma2:2b"
         self.is_running = True
 
@@ -45,7 +45,6 @@ class VoiceControl:
         
         Respond ONLY in this JSON format:
         {"function": "function_name", "parameters": {"param1": "value1"}}
-        DO NOT include anything besides the function name for the key "function"
         """
 
     def record_audio(self):
@@ -168,9 +167,6 @@ class VoiceControl:
                 },
                 timeout=10,
             )
-
-            logger.debug(f"LLM response received in {time.time()-start_time:.2f}s")
-            logger.debug(f"Raw LLM response: {response.text}")
 
             try:
                 json_response = response.json()
