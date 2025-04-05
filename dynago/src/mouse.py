@@ -60,36 +60,19 @@ class GestureMouse:
                 self.smoothed_pos = (
                     int(
                         self.smoothed_pos[0]
-                        + self.smoothing_factor * (current_x - self.smoothed_pos[0])
+                        + self.smoothing_factor
+                        * (current_x - self.smoothed_pos[0])
+                        * abs(self.screen_width / 2 - current_x)
+                        / self.screen_width
                     ),
                     int(
                         self.smoothed_pos[1]
-                        + self.smoothing_factor * (current_y - self.smoothed_pos[1])
+                        + self.smoothing_factor
+                        * (current_y - self.smoothed_pos[1])
+                        * abs(self.screen_height / 2 - current_y)
+                        / self.screen_height
                     ),
                 )
-
-            # Detect click (sudden movement within thresholds)
-            if self.last_position is not None and self.cooldown_counter <= 0:
-                dx = finger_tip_pos[0] - self.last_position[0]
-                dy = finger_tip_pos[1] - self.last_position[1]
-                movement_magnitude = np.sqrt(dx**2 + dy**2)
-
-                # Add to velocity buffer (for more robust click detection)
-                self.click_velocity_buffer.append(movement_magnitude)
-                if (
-                    len(self.click_velocity_buffer) > 3
-                    and movement_magnitude > self.mouse_threshold
-                ):
-                    self.click_velocity_buffer.pop(0)
-
-                # Check for click (sudden movement between thresholds)
-                if len(self.click_velocity_buffer) == 3 and all(
-                    self.min_click_threshold < v < self.max_click_threshold
-                    for v in self.click_velocity_buffer
-                ):
-                    # self.mouse.click(Button.left)
-                    self.cooldown_counter = self.click_cooldown
-                    self.click_velocity_buffer.clear()
 
             # Update mouse position
             self.mouse.position = self.smoothed_pos
