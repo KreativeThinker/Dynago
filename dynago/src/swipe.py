@@ -29,7 +29,7 @@ def data_saver_process():
                 break
             # Flatten landmarks and convert to strings
             flat_landmarks = [
-                f"{coord:.6f}" for point in data["landmarks"] for coord in point
+                f"{coord}" for point in data["landmarks"] for coord in point
             ]
             writer.writerow(
                 [data["gesture_id"], data["swipe_direction"], *flat_landmarks]
