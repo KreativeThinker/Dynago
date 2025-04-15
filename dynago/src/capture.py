@@ -62,8 +62,8 @@ def process_frame(frame, hands, model, state, mouse_controller):
             # Predict gesture
             gesture = predict_gesture(norm_landmarks, model)
 
-            if gesture == 6 and ENABLE_MOUSE:
-                output["gesture_name"] = GESTURE_MAP.get(6, {}).get("name", "point")
+            if gesture == 5 and ENABLE_MOUSE:
+                output["gesture_name"] = GESTURE_MAP.get(5, {}).get("name", "point")
                 output["in_mouse_mode"] = True
                 finger_tip_pos = raw_landmarks[8][:2]  # index finger tip (x,y)
                 mouse_controller.update(finger_tip_pos)

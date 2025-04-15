@@ -20,7 +20,7 @@ def train():
     )
 
     # Train the SVM model
-    svm_model = SVC(kernel="rbf", C=10, gamma="scale")
+    svm_model = SVC(kernel="rbf", C=10, gamma="scale", probability=True)
     svm_model.fit(X_train, y_train)
 
     # Test the model
