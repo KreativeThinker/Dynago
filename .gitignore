@@ -172,3 +172,4 @@ cython_debug/
 
 # MyIgnore
 # dynago/data/raw.csv
+.obsidian
