@@ -27,6 +27,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 capture = "dynago.utils.capture_data:capture"
 normalize = "dynago.utils.normalize_data:normalize"
+visualize = "dynago.utils.visualize_data:visualize"
+analyze = "dynago.utils.analyze_performance:main"
 train = "dynago.src.train:train"
 dev = "dynago.src.main:main"
 test = "dynago.src.test:test"
