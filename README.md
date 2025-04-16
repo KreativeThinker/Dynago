@@ -29,6 +29,7 @@ Whether for accessibility, low-interaction environments, or futuristic UI protot
 - Weakest Class: `pinch` (72.3%)
 
 ### Confusion Matrix Preview:
+
 > <img src="dynago/performance/confusion_matrix.png"/>
 
 ---
@@ -55,7 +56,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install poetry
 poetry install
-````
+```
 
 ### Commands
 
@@ -65,19 +66,20 @@ poetry install
 | `poetry run normalize`    | Normalize and prepare dataset for training |
 | `poetry run train_static` | Train SVM model                            |
 | `poetry run dev`          | Launch dynamic gesture predictor           |
-> \>_  See all commands: [pyproject.toml](./pyproject.toml)
+
+> \>\_ See all commands: [pyproject.toml](./pyproject.toml)
 
 ---
 
 ## 📈 Experiment Highlights
 
-|Gesture|Accuracy|AUC|Confusions|
-|---|---|---|---|
-|`point`|99.4%|1.00|minor confusion with `fist`|
-|`pinch`|72.3%|0.95|major confusion with `palm` and `point`|
-|`three_fingers`|87.3%|1.00|some confusion with `two_fingers`|
+| Gesture         | Accuracy | AUC  | Confusions                              |
+| --------------- | -------- | ---- | --------------------------------------- |
+| `point`         | 99.4%    | 1.00 | minor confusion with `fist`             |
+| `pinch`         | 72.3%    | 0.95 | major confusion with `palm` and `point` |
+| `three_fingers` | 87.3%    | 1.00 | some confusion with `two_fingers`       |
 
-> 📊 See full report: [Experiment Analysis](./Experiment Analysis.md)
+> 📊 See full report: [Experiment Analysis](./Experiment_Analysis.md)
 
 ---
 
