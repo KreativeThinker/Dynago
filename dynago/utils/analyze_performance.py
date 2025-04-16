@@ -153,14 +153,14 @@ def main():
     y_pred = clf.predict(X_test)
 
     # Visualization and analysis
-    # cm = plot_confusion_matrix(y_test, y_pred, gesture_labels)
+    cm = plot_confusion_matrix(y_test, y_pred, gesture_labels)
     roc_auc = plot_roc_curves(clf, X_test, y_test, gesture_labels)
     avg_precision = plot_precision_recall(clf, X_test, y_test, gesture_labels)
     generate_performance_report(y_test, y_pred, gesture_labels)
 
     # Save metrics for comparison
     performance_metrics = {
-        # "confusion_matrix": cm.tolist(),
+        "confusion_matrix": cm.tolist(),
         "roc_auc": roc_auc,
         "average_precision": avg_precision,
     }
