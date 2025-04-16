@@ -1,4 +1,5 @@
-![[Logo.png]]
+<img src="public/Logo.png"/>
+
 # 🦖 DyNaGO – Dynamic Natural Gesture Operations
 
 DyNaGO is a real-time AI-powered, Human Computer Interface employing gesture recognition. It uses computer vision and machine learning to enable users to control their machines using natural, dynamic hand gestures—no special hardware required.
@@ -28,13 +29,13 @@ Whether for accessibility, low-interaction environments, or futuristic UI protot
 - Weakest Class: `pinch` (72.3%)
 
 ### Confusion Matrix Preview:
-> ![Confusion Matrix](confusion_matrix.png)
+> <img src="dynago/performance/confusion_matrix.png"/>
 
 ---
 
 ## 🏗 System Architecture
 
-> ![Architecture](architecture.png)
+> <img src="public/architecture.png"/>
 
 1. **Initialization** – Load webcam, environment, set base gesture
 2. **Static Gesture Detection** – Classify using MediaPipe landmarks + SVM
