@@ -2,8 +2,10 @@ import math
 import csv
 import multiprocessing
 import os
+from joblib.logger import pprint
 import numpy as np
 from collections import deque
+
 from dynago.config import VEL_THRESHOLD
 
 # Data structures
@@ -27,12 +29,11 @@ def data_saver_process():
             data = save_data_queue.get()
             if data is None:  # Termination signal
                 break
-            # Flatten landmarks and convert to strings
-            flat_landmarks = [
-                f"{coord}" for point in data["landmarks"] for coord in point
-            ]
+
+            pprint.pprint(data["landmarks"])
+
             writer.writerow(
-                [data["gesture_id"], data["swipe_direction"], *flat_landmarks]
+                [data["gesture_id"], data["swipe_direction"], *data["landmarks"]]
             )
 
 
@@ -77,13 +78,14 @@ def calculate_swipe_direction(gesture_id):
 
     if direction is not None and landmark_history:
         # Send data to saver process
-        save_data_queue.put(
-            {
-                "gesture_id": gesture_id,
-                "swipe_direction": direction,
-                "landmarks": landmark_history[-1],  # Most recent full landmarks
-            }
-        )
+        data = {
+            "gesture_id": gesture_id,
+            "swipe_direction": direction,
+            "landmarks": list(landmark_history),
+        }
+        # pprint.pprint(data["landmarks"])
+        save_data_queue.put(data)
+        landmark_history.clear()
 
     return direction
 
