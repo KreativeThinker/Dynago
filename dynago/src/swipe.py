@@ -2,11 +2,13 @@ import math
 import csv
 import multiprocessing
 import os
-from joblib.logger import pprint
+import joblib
 import numpy as np
 from collections import deque
 
 from dynago.config import VEL_THRESHOLD
+
+model = joblib.load("dynago/models/swipe_svm.pkl")
 
 # Data structures
 mean_landmark_history = deque(maxlen=10)
@@ -30,8 +32,6 @@ def data_saver_process():
             if data is None:  # Termination signal
                 break
 
-            pprint.pprint(data["landmarks"])
-
             writer.writerow(
                 [data["gesture_id"], data["swipe_direction"], *data["landmarks"]]
             )
@@ -49,6 +49,33 @@ def get_tracking_point(raw_landmarks, indices):
         landmark_history.append(raw_landmarks)  # Store full landmarks
         return np.mean(points, axis=0)
     return raw_landmarks[0][:2]
+
+
+# def calculate_swipe_direction(gesture_id):
+#     flat_landmarks = []
+#     for landmarks in landmark_history:
+#         for point in landmarks:
+#             flat_landmarks.extend(point)  # Only use x and y coordinates
+#
+#     # Ensure you're flattening the correct number of features
+#     if len(flat_landmarks) != 630:  # If it's not 630, this will raise a flag
+#         # print(f"Warning: Features mismatch! Expected 630, got {len(flat_landmarks)}")
+#         return None
+#
+#     # Make prediction using the trained model
+#     X = np.array(flat_landmarks).reshape(1, -1)  # Reshape for single prediction
+#     prediction = model.predict(X)
+#
+#     # Decode the gesture prediction
+#     predicted_gesture = prediction[0]  # Assuming single output from the model
+#
+#     if predicted_gesture[0] != gesture_id:
+#         print(f"Geseture Mismatch: Got {predicted_gesture[0]} expected {gesture_id}")
+#
+#     # Print or log the prediction for debugging
+#     print(f"Predicted Gesture: {predicted_gesture}")
+#     landmark_history.clear()
+#     return predicted_gesture[1]
 
 
 def calculate_swipe_direction(gesture_id):
@@ -83,7 +110,6 @@ def calculate_swipe_direction(gesture_id):
             "swipe_direction": direction,
             "landmarks": list(landmark_history),
         }
-        # pprint.pprint(data["landmarks"])
         save_data_queue.put(data)
         landmark_history.clear()
 

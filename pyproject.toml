@@ -1,6 +1,6 @@
 [project]
 name = "dynago"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = [
     {name = "KreativeThinker",email = "sagely2005eagle@gmail.com"}
@@ -30,5 +30,6 @@ normalize = "dynago.utils.normalize_data:normalize"
 visualize = "dynago.utils.visualize_data:visualize"
 analyze = "dynago.utils.analyze_performance:main"
 train_static = "dynago.src.train_static:train"
+train_swipe = "dynago.src.train_swipe:train"
 dev = "dynago.src.main:main"
 test = "dynago.src.test:test"
