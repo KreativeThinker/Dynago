@@ -1,78 +1,111 @@
-# 🚀 Dynago - Dynamic and Natural Gesture Operations
+![[Logo.png]]
+# 🦖 DyNaGO – Dynamic Natural Gesture Operations
 
-## 🎯 Overview
-**Dynago** is an AI-powered gesture recognition system designed for **Linux-based computing**. Using **computer vision** and **machine learning**, it allows users to control their system effortlessly with hand gestures detected via a standard webcam. This eliminates the reliance on traditional input devices like keyboards and mice, enhancing accessibility and user experience.
+DyNaGO is a real-time AI-powered, Human Computer Interface employing gesture recognition. It uses computer vision and machine learning to enable users to control their machines using natural, dynamic hand gestures—no special hardware required.
 
-### ✨ Key Features
-✅ **Full system control** using AI-powered gestures  
-✅ **Mediapipe & SVM-based classification** for accuracy  
-✅ **No additional hardware required** – just a webcam!  
-✅ **Lightweight & optimized for low-resource devices**  
-✅ **Applications in medical, industrial, and assistive tech**  
+Whether for accessibility, low-interaction environments, or futuristic UI prototyping, DyNaGO delivers a lightweight, modular, and efficient solution for gesture-based computing.
 
 ---
 
-## 🛠 Installation
+## ✨ Features
 
-Clone the repository:
-```bash
-git clone https://github.com/KreativeThinker/Dynago
-cd Dynago
-```
-
-Initialize a virtual environment and install dependencies:
-```bash
-python3.12 -m venv .venv
-# OR
-python -m venv .venv
-
-# Activate venv
-source .venv/bin/activate
-
-# Install packages
-pip install poetry
-poetry install
-```
+- 🔧 **SVM + MediaPipe–based gesture classification**
+- ⚡ **Dynamic velocity vector analysis** for real-time gesture detection
+- 🎮 **System command mapping**: volume control, tab switching, app launch, and more
+- 🖥️ **Fully functional on standard webcams**
+- 🧱 **Modular architecture** – easily expandable with new gestures or models
+- 🧪 **Trained on 4,200+ gesture samples** across 6 static classes
 
 ---
 
-## 🚀 Usage
+## 🧠 Dataset & Training Summary
 
-| Command                | Task                                                                                                        |
-|-----------------------|------------------------------------------------------------------------------------------------------------|
-| `poetry run capture`   | Opens camera, takes gesture name as input, captures frames & landmark data. Press 'space' to capture, 'q' to exit. |
-| `poetry run normalize` | Normalizes collected data and stores it in `dynago/data/normalized.csv`.                                   |
-| `poetry run train`     | Trains the AI model and saves it for future use.                                                           |
-| `poetry run dev`       | Runs a simple single-frame capture and prediction model.                                                   |
+- Total Samples: **4291**
+- Gestures: `fist`, `two_fingers`, `three_fingers (2 types)`, `pinch`, `point`
+- Normalization: **wrist-centered + scaled to unit sphere**
+- Accuracy: **92.3%**
+- Best Class: `point` (99.4%)
+- Weakest Class: `pinch` (72.3%)
+
+### Confusion Matrix Preview:
+> ![Confusion Matrix](confusion_matrix.png)
 
 ---
 
 ## 🏗 System Architecture
 
-📌 **How Dynago Works:**
+> ![Architecture](architecture.png)
 
-![System Architecture](architecture.png)
-
-1️⃣ **Initialization**: Load system libraries, initialize the webcam, and set parameters.  
-2️⃣ **Base Gesture Detection**: Capture frames, extract hand landmarks via **Mediapipe**, convert to feature vectors, and classify static gestures using **SVM**.  
-3️⃣ **Dynamic Gesture Recognition**: Detect motion by computing velocity vectors between frames, classify gestures dynamically with **SVM & motion thresholds**.  
-4️⃣ **Action Execution**: Trigger corresponding system actions based on recognized gestures.  
-
-🔹 **Designed for Efficiency & Accessibility** – Works on standard webcams without external hardware, making gesture-based computing widely accessible.  
+1. **Initialization** – Load webcam, environment, set base gesture
+2. **Static Gesture Detection** – Classify using MediaPipe landmarks + SVM
+3. **Motion Vector Analysis** – Track gesture trajectory using velocity between frames
+4. **Action Mapping** – Trigger system functions via OS hooks / APIs
 
 ---
 
-## 📌 Future Enhancements
-🚀 Improve gesture recognition accuracy with deep learning (CNNs/RNNs).  
-🚀 Enhance real-time responsiveness with GPU acceleration.  
-🚀 Expand gesture mappings for additional Linux system controls.  
+## 🛠 Usage
+
+### Installation
+
+```bash
+git clone https://github.com/KreativeThinker/DyNaGO
+cd DyNaGO
+python -m venv .venv
+source .venv/bin/activate
+pip install poetry
+poetry install
+````
+
+### Commands
+
+| Command                   | Task                                       |
+| ------------------------- | ------------------------------------------ |
+| `poetry run capture`      | Capture training samples with label        |
+| `poetry run normalize`    | Normalize and prepare dataset for training |
+| `poetry run train_static` | Train SVM model                            |
+| `poetry run dev`          | Launch dynamic gesture predictor           |
+> \>_  See all commands: [pyproject.toml](./pyproject.toml)
 
 ---
 
+## 📈 Experiment Highlights
+
+|Gesture|Accuracy|AUC|Confusions|
+|---|---|---|---|
+|`point`|99.4%|1.00|minor confusion with `fist`|
+|`pinch`|72.3%|0.95|major confusion with `palm` and `point`|
+|`three_fingers`|87.3%|1.00|some confusion with `two_fingers`|
+
+> 📊 See full report: [Experiment Analysis](./Experiment Analysis.md)
+
+---
+
+## 🎥 Demo
+
+_Coming Soon — recording in progress. Will showcase real-time gesture use for volume control and workspace switching._
+
+---
+
+## 🌱 Future Work
+
+- Better configuration file
+- Hybrid dynamic gesture detection with light weight SVM + Velocity Vector Analysis
+- Complete cursor control
+- Real-time inference optimization (GPU support)
+- Multi-gesture chaining (command macros)
+- Browser-based version via TensorFlow.js
+- Integrated Audio Agent with custom function execution (branch [voice](https://github.com/KreativeThinker/Dynago/tree/voice))
+
+---
+
+## 👨‍💻 Author
+
+Built by [Anumeya Sehgal](https://github.com/KreativeThinker)  
+✉ Email: [anumeyasehgal@proton.me](mailto:anumeyasehgal@proton.me)  
+🌐 LinkedIn: [anumeya-sehgal](https://linkedin.com/in/anumeya-sehgal)
+
+---
 
 ## 📜 License
-Dynago is **open-source** and available under the **MIT License**.  
 
-For more details, refer to the project documentation or research references in the provided presentation.  
-
-🚀 *Let's make gesture-based computing the future!*
+[MIT License](./LICENSE) – Free for use, distribution, and enhancement.

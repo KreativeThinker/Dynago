@@ -88,20 +88,14 @@ C. Precision-Recall Tradeoffs:
 - "open palm" shows lowest average precision (0.82)
 - Consistent with its 2 misclassifications
 
-#### 5. Recommendations for Improvement
-
-A. Data Collection Focus:
-
+#### 5. TODO
 1. Pinch Variations:
-
    - Collect more samples with thumb-index distances between 1-2cm
    - Include different hand orientations
 
 2. Fist-Point Ambiguity:
    - Record transitional frames between these gestures
    - Verify labeling consistency
-
-B. Model Enhancements:
 
 #### 6. Conclusion
 
