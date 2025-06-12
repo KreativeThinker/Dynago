@@ -85,7 +85,7 @@ poetry install
 
 ## 🎥 Demo
 
-_Coming Soon — recording in progress. Will showcase real-time gesture use for volume control and workspace switching._
+<video src="public/dynago-demo.mkv"/>
 
 ---
 
