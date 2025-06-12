@@ -1,4 +1,4 @@
-<img src="public/Logo.png"/>
+<img src="public/Logo.png" style="width: 100%; height: auto;" />
 
 # 🦖 DyNaGO – Dynamic Natural Gesture Operations
 
@@ -85,7 +85,7 @@ poetry install
 
 ## 🎥 Demo
 
-<video src="public/dynago-demo.mkv"/>
+<video controls style="width: 100%; max-width: 800px;" src="public/dynago-demo.mp4"></video>
 
 ---
 
