@@ -85,7 +85,7 @@ poetry install
 
 ## 🎥 Demo
 
-<video controls style="width: 100%; max-width: 800px;" src="public/dynago-demo.mp4"></video>
+<img src="public/dynago-demo.gif" style="width: 100%; height: auto;" />
 
 ---
 
