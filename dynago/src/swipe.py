@@ -1,14 +1,16 @@
+# import csv
 import math
-import csv
-import multiprocessing
+
+# import multiprocessing
 import os
-import joblib
-import numpy as np
 from collections import deque
+
+# import joblib
+import numpy as np
 
 from dynago.config import VEL_THRESHOLD
 
-model = joblib.load("dynago/models/swipe_svm.pkl")
+# model = joblib.load("dynago/models/swipe_svm.pkl")
 
 # Data structures
 mean_landmark_history = deque(maxlen=10)
@@ -20,30 +22,31 @@ DATA_FILE = os.path.join(DATA_DIR, "swipe.csv")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Queue for parallel data saving
-save_data_queue = multiprocessing.Queue()
-
-
-def data_saver_process():
-    """Background process to save gesture data efficiently"""
-    with open(DATA_FILE, "a", newline="") as f:
-        writer = csv.writer(f)
-        while True:
-            data = save_data_queue.get()
-            if data is None:  # Termination signal
-                break
-
-            writer.writerow(
-                [data["gesture_id"], data["swipe_direction"], *data["landmarks"]]
-            )
-
-
-# Start the saver process
-saver = multiprocessing.Process(target=data_saver_process)
-saver.start()
+# save_data_queue = multiprocessing.Queue()
+#
+#
+# def data_saver_process():
+#     """Background process to save gesture data efficiently"""
+#     with open(DATA_FILE, "a", newline="") as f:
+#         writer = csv.writer(f)
+#         while True:
+#             data = save_data_queue.get()
+#             if data is None:  # Termination signal
+#                 break
+#
+#             writer.writerow(
+#                 [data["gesture_id"], data["swipe_direction"], *data["landmarks"]]
+#             )
+#
+#
+# # Start the saver process
+# saver = multiprocessing.Process(target=data_saver_process)
+# saver.start()
+#
 
 
 def get_tracking_point(raw_landmarks, indices):
-    """Get tracking points and update history"""
+    """Get tracking points and update history."""
     points = [raw_landmarks[i][:2] for i in indices if i < len(raw_landmarks)]
     if points:
         landmark_history.append(raw_landmarks)  # Store full landmarks
@@ -79,7 +82,7 @@ def get_tracking_point(raw_landmarks, indices):
 
 
 def calculate_swipe_direction(gesture_id):
-    """Calculate direction and store data for training"""
+    """Calculate direction and store data for training."""
     if len(mean_landmark_history) < 2:
         return None
 
@@ -105,18 +108,18 @@ def calculate_swipe_direction(gesture_id):
 
     if direction is not None and landmark_history:
         # Send data to saver process
-        data = {
-            "gesture_id": gesture_id,
-            "swipe_direction": direction,
-            "landmarks": list(landmark_history),
-        }
-        save_data_queue.put(data)
+        # data = {
+        #     "gesture_id": gesture_id,
+        #     "swipe_direction": direction,
+        #     "landmarks": list(landmark_history),
+        # }
+        # save_data_queue.put(data)
         landmark_history.clear()
 
     return direction
 
 
 def cleanup():
-    """Call this when exiting the application"""
-    save_data_queue.put(None)
-    saver.join()
+    """Call this when exiting the application."""
+    # save_data_queue.put(None)
+    # saver.join()
