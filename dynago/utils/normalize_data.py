@@ -1,6 +1,7 @@
-import pandas as pd
-import numpy as np
 import os
+
+import numpy as np
+import pandas as pd
 
 RAW_CSV = "dynago/data/raw.csv"
 NORM_CSV = "dynago/data/normalized.csv"
