@@ -1,14 +1,15 @@
-import pyautogui
-import numpy as np
-from pynput.mouse import Controller, Button
 import threading
 from queue import Queue
+
+import numpy as np
+import pyautogui
+from pynput.mouse import Button, Controller
 
 
 class GestureMouse:
     def __init__(
         self,
-        smoothing_factor=0.2,
+        smoothing_factor=0.8,
         mouse_threshold=0.07,
         min_click_threshold=0.01,  # Minimum movement to consider as potential click
         max_click_threshold=0.06,  # Maximum movement to still count as click

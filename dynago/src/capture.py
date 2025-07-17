@@ -1,18 +1,20 @@
+import multiprocessing
+
 import cv2
+import joblib
 import mediapipe as mp
 import numpy as np
-import joblib
-import multiprocessing
-from dynago.src.mouse import GestureMouse
-from dynago.config import N_FRAMES, GESTURE_MAP, ENABLE_MOUSE
-from dynago.src.swipe import (
-    get_tracking_point,
-    calculate_swipe_direction,
-    mean_landmark_history,
-    landmark_history,
-    cleanup,
-)
+
+from dynago.config import ENABLE_MOUSE, GESTURE_MAP, N_FRAMES
 from dynago.src.command import execute_command
+from dynago.src.mouse import GestureMouse
+from dynago.src.swipe import (
+    calculate_swipe_direction,
+    cleanup,
+    get_tracking_point,
+    landmark_history,
+    mean_landmark_history,
+)
 
 MODEL_PATH = "dynago/models/gesture_svm.pkl"
 
@@ -39,7 +41,7 @@ def predict_gesture(input_data, model):
 
 
 def process_frame(frame, hands, model, state, mouse_controller):
-    """Process a single frame and return results"""
+    """Process a single frame and return results."""
     frame = cv2.flip(frame, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb_frame)
@@ -62,7 +64,7 @@ def process_frame(frame, hands, model, state, mouse_controller):
             # Predict gesture
             gesture = predict_gesture(norm_landmarks, model)
 
-            if gesture == 5 and ENABLE_MOUSE:
+            if gesture == 4 and ENABLE_MOUSE:
                 output["gesture_name"] = GESTURE_MAP.get(5, {}).get("name", "point")
                 output["in_mouse_mode"] = True
                 finger_tip_pos = raw_landmarks[8][:2]  # index finger tip (x,y)
@@ -116,7 +118,7 @@ def process_frame(frame, hands, model, state, mouse_controller):
 
 
 def capture_landmarks(cmd_queue):
-    """Main capture process with improved resource management"""
+    """Main capture process with improved resource management."""
     cap = cv2.VideoCapture(0)
     mouse_controller = GestureMouse()
     in_mouse_mode = False  # Track if we're in mouse control mode
@@ -168,7 +170,7 @@ def capture_landmarks(cmd_queue):
 
 
 def command_worker(cmd_queue):
-    """Command processing worker"""
+    """Command processing worker."""
     while True:
         command = cmd_queue.get()
         if command is None:  # Sentinel value to stop
