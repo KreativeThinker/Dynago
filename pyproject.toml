@@ -1,0 +1,43 @@
+[project]
+name = "dynago"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+[[project.authors]]
+name = "Anumeya Sehgal"
+email = "anumeyasehgal@proton.me"
+
+[dependency-groups]
+dev = [ "commitizen>=4.8.3", "isort>=6.0.1", "pre-commit>=4.2.0", "ruff>=0.12.3",]
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "pep440"
+version_provider = "uv"
+update_changelog_on_bump = true
+
+
+[project.scripts]
+project_name = "project_entrypoint:command"
+
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

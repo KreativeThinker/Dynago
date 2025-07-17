@@ -1,0 +1,34 @@
+# dynago
+
+{{#if description}}
+{{description}}
+{{/if}}
+
+---
+
+## Features
+
+---
+
+## Installation
+
+```bash
+# Installation guide for the project
+```
+
+---
+
+## Usage
+
+```bash
+# How to use the project
+```
+
+---
+
+## Contributing
+
+---
+
+## License
+This project is licensed under the [MIT License](LICENSE).
