@@ -116,9 +116,13 @@ def execute_function(command):
         elif command["function"] == "calculate":
             result = eval(command["parameters"]["expression"])
             import subprocess
+            result_text = str(result)
 
-            subprocess.run(["notify-send", result])
-            print(f"Calculation result: {result}")
+            try:
+                subprocess.run(["notify-send", result_text])
+            except Exception as notify_error:
+                print(f"notify-send failed: {notify_error}")
+            print(f"Calculation result: {result_text}")
 
         elif command["function"] in ["play", "pause", "next", "previous"]:
             import subprocess
