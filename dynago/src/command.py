@@ -72,7 +72,5 @@ def execute_command(gesture_id, direction):
 
     if function_id in FUNCTION_MAP:
         threading.Thread(target=FUNCTION_MAP[function_id], args=(direction,)).start()
-        threading.Thread(target=print, args=(function_id,direction)).start()
-
     else:
         print(f"Function {function_id} not defined!")

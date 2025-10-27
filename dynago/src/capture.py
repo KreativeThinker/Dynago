@@ -1,5 +1,6 @@
 import multiprocessing
 from collections import deque
+import time
 
 import cv2
 import joblib
@@ -24,6 +25,7 @@ mp_drawing = mp.solutions.drawing_utils
 
 BUFFER_SIZE = 10
 PREDICTION_BUFFER_SIZE = 5
+SWIPE_DISPLAY_TIME = 1.5
 
 
 def normalize_landmarks(landmarks):
@@ -45,7 +47,7 @@ def predict_gesture(input_data, model):
 def process_frame(frame, hands, model, state, mouse_controller):
     """Process a single frame and return results."""
     frame = cv2.flip(frame, 1)
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR_RGB)
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb_frame)
 
     output = {
@@ -58,6 +60,7 @@ def process_frame(frame, hands, model, state, mouse_controller):
     
     # Store the currently confirmed gesture
     last_confirmed_gesture = state["current_gesture_id"]
+    confirmed_gesture = None
     
     if results.multi_hand_landmarks:
         for landmarks in results.multi_hand_landmarks:
@@ -162,10 +165,20 @@ def capture_landmarks(cmd_queue):
         "tracking_motion": False,
         "tracking_indices": None,
         "current_gesture_id": None,
+        "prediction_buffer": deque(maxlen=PREDICTION_BUFFER_SIZE),
+        "last_swipe_text": "",
+        "last_swipe_time": 0,
     }
 
     # Load model once at start
     model = joblib.load(MODEL_PATH)
+
+    direction_map = {
+        0: "Left",
+        1: "Right",
+        2: "Down",
+        3: "Up"
+    }
 
     # Initialize hands detector
     with mp_hands.Hands(
@@ -186,11 +199,40 @@ def capture_landmarks(cmd_queue):
 
             # Skip command processing if in mouse mode
             if not in_mouse_mode and result["command"] is not None:
+                gesture_id, swipe_id = result["command"]
+                
+                gesture_name = result.get("gesture_name", f"ID {gesture_id}")
+                swipe_name = direction_map.get(swipe_id, f"ID {swipe_id}")
+                
+                state["last_swipe_text"] = f"{gesture_name}: {swipe_name}"
+                state["last_swipe_time"] = time.time()
+                
                 cmd_queue.put(result["command"])
 
             # Update frame count
             state["frame_count"] += 1
 
+            cv2.putText(
+                result["frame"],
+                f'Gesture: {result["gesture_name"]}',
+                (10, 50),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2,
+            )
+
+            if (time.time() - state["last_swipe_time"]) < SWIPE_DISPLAY_TIME:
+                cv2.putText(
+                    result["frame"],
+                    state["last_swipe_text"],
+                    (10, 100),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 255),
+                    2,
+                )
+            
             # Display frame
             cv2.imshow("Gesture Recognition", result["frame"])
             # cv2.moveWindow("Gesture Recognition", 100, 100)  # Set position
