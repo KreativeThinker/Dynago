@@ -49,6 +49,7 @@ FUNCTION_MAP = {
     5: lambda direction: print(f"Cursor select {direction}"),
     6: lambda direction: print(f"Drawing {direction}"),
     7: pinch,
+    8: lambda direction: print(f"Drawing {direction}"),
     9: page_scroll,
 }
 

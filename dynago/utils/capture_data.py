@@ -1,8 +1,10 @@
+import csv
+import os
+
 import cv2
 import mediapipe as mp
 import numpy as np
-import csv
-import os
+
 from dynago.config import GESTURE_MAP
 
 # Constants
@@ -53,8 +55,8 @@ def capture():
 
     cap = cv2.VideoCapture(0)
     print("📷 Press SPACE to capture landmarks, 'q' to quit.")
-
-    while cap.isOpened():
+    count = 0
+    while cap.isOpened() and count < 100:
         success, frame = cap.read()
         if not success:
             continue
@@ -73,6 +75,7 @@ def capture():
         key = cv2.waitKey(1)
         if key == 32:  # SPACE key to capture
             if results.multi_hand_landmarks:
+                count += 1
                 for landmarks in results.multi_hand_landmarks:
                     save_landmark_data(
                         [(lm.x, lm.y, lm.z) for lm in landmarks.landmark], gesture_index
