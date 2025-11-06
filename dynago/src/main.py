@@ -1,7 +1,12 @@
 import multiprocessing
+
+try:
+    import pyautogui  # type: ignore
+except ImportError:  # pragma: no cover - optional dependency
+    pyautogui = None  # type: ignore
+
 from dynago.src.capture import capture_landmarks, command_worker, cleanup
-from dynago.src.voice_control import VoiceControl
-import pyautogui
+from dynago.src.voice_control import VoiceControlConfig, voice_control_process_entry
 
 
 def main():
@@ -9,8 +14,16 @@ def main():
 
     # Create queues for inter-process communication
     cmd_queue = ctx.Queue(maxsize=10)  # For gesture commands
-    voice_queue = ctx.Queue(maxsize=10)  # For voice commands
+    voice_queue = ctx.Queue(maxsize=10)  # For raw voice transcripts (debug/logging)
     llm_queue = ctx.Queue(maxsize=10)  # For LLM function calls
+    voice_stop_event = ctx.Event()
+    voice_config = VoiceControlConfig(
+    whisper_binary="/home/bufferfis/code/Dynago/whisper.cpp/build/bin/whisper-cli",
+)
+
+    gesture_worker = None
+    voice_process = None
+    llm_processor = None
 
     try:
         # Start gesture command worker
@@ -22,8 +35,11 @@ def main():
         gesture_worker.start()
 
         # Start voice control process
-        voice_control = VoiceControl(voice_queue, llm_queue)
-        voice_process = ctx.Process(target=voice_control.run)
+        voice_process = ctx.Process(
+            target=voice_control_process_entry,
+            args=(voice_queue, llm_queue, voice_stop_event, voice_config.to_payload()),
+            daemon=True,
+        )
         voice_process.start()
 
         # Start LLM command processor
@@ -41,22 +57,23 @@ def main():
 
         # Signal workers to stop
         cmd_queue.put(None)
-        voice_queue.put(None)
         llm_queue.put(None)
+        voice_stop_event.set()
 
         # Wait for workers to finish
-        gesture_worker.join(timeout=1)
-        voice_control.is_running = False
-        voice_process.kill()
-        voice_process.join(timeout=1)
-        llm_processor.join(timeout=1)
+        if gesture_worker is not None:
+            gesture_worker.join(timeout=1)
+        if voice_process is not None:
+            voice_process.join(timeout=3)
+        if llm_processor is not None:
+            llm_processor.join(timeout=1)
 
         # Force terminate if needed
-        if gesture_worker.is_alive():
+        if gesture_worker is not None and gesture_worker.is_alive():
             gesture_worker.terminate()
-        if voice_process.is_alive():
+        if voice_process is not None and voice_process.is_alive():
             voice_process.terminate()
-        if llm_processor.is_alive():
+        if llm_processor is not None and llm_processor.is_alive():
             llm_processor.terminate()
 
         # Clean up queues
@@ -68,11 +85,10 @@ def main():
 def process_llm_commands(llm_queue):
     """Process function calls from the LLM"""
     while True:
-        if not llm_queue.empty():
-            command = llm_queue.get()
-            if command is None:  # Termination signal
-                break
-            execute_function(command)
+        command = llm_queue.get()
+        if command is None:  # Termination signal
+            break
+        execute_function(command)
 
 
 def execute_function(command):
@@ -80,6 +96,10 @@ def execute_function(command):
     try:
         if command["function"] == "type":
             text_to_type = command["parameters"]["text"]
+
+            if pyautogui is None:
+                print("pyautogui is not installed; cannot type text.")
+                return
 
             try:
                 pyautogui.write(text_to_type, interval=0.05)
@@ -96,9 +116,13 @@ def execute_function(command):
         elif command["function"] == "calculate":
             result = eval(command["parameters"]["expression"])
             import subprocess
+            result_text = str(result)
 
-            subprocess.run(["notify-send", result])
-            print(f"Calculation result: {result}")
+            try:
+                subprocess.run(["notify-send", result_text])
+            except Exception as notify_error:
+                print(f"notify-send failed: {notify_error}")
+            print(f"Calculation result: {result_text}")
 
         elif command["function"] in ["play", "pause", "next", "previous"]:
             import subprocess
