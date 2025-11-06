@@ -46,7 +46,7 @@ class VoiceControlConfig:
     """Configuration options for the voice control agent."""
 
     sample_rate: int = 16_000
-    wake_window_seconds: float = 2.5
+    wake_window_seconds: float = 1.5
     command_window_seconds: float = 5.0
     wake_word: str = "hello"
     whisper_binary: Optional[str] = None
@@ -62,10 +62,11 @@ class VoiceControlConfig:
     log_level: int = logging.INFO
     min_command_length: int = 4
     noise_phrases: tuple[str, ...] = ("applause", "laughter", "music", "noise")
-    wake_similarity_threshold: float = 0.55
-    wake_energy_threshold: float = 120.0
-    wake_retries: int = 2
+    wake_similarity_threshold: float = 0.50
+    wake_energy_threshold: float = 80.0
+    wake_retries: int = 1
     wake_aliases: tuple[str, ...] = ()
+    command_retries: int = 0
     wake_prompt_template: str = (
         "You are only listening for the wake word '{wake_word}'. Respond with that exact word if heard."  # noqa: E501
     )
@@ -87,16 +88,23 @@ class VoiceControlConfig:
         if not self.wake_aliases:
             base = self.wake_word.lower().strip()
             variants = {base}
+            # Remove spaces
             variants.add(base.replace(" ", ""))
-            variants.add(re.sub(r"[^a-z]", "", base))
+            
+            # Specific phonetic variants for "hello"
+            if base == "hello":
+                variants.update([
+                    "ello",      # Dropped H
+                    "helo",      # Single L
+                    "hullo",     # British variant
+                    "hallo",     # Germanic variant
+                ])
+            
+            # Generic transformations for any wake word
             if base.startswith("h") and len(base) > 1:
-                variants.add(base[1:])
-            if base.endswith("o"):
-                variants.add(base[:-1])
-                variants.add(base[:-1] + "a")
-            if base.endswith("ow"):
-                variants.add(base[:-2] + "o")
-            self.wake_aliases = tuple(sorted({alias for alias in variants if alias}))
+                variants.add(base[1:])  # Drop leading H
+            
+            self.wake_aliases = tuple(sorted({alias for alias in variants if alias and len(alias) >= 3}))
         if self.wake_retries < 0:
             self.wake_retries = 0
         if self.wake_energy_threshold < 0:
@@ -368,11 +376,15 @@ class VoiceControl:
                 logger.debug("Wake window transcript: '%s'", raw_wake)
                 if not self._contains_wake_word(clean_wake) and not self._contains_wake_word(raw_wake):
                     continue
-                logger.info("Wake word detected: '%s'", raw_wake)
+                
+                logger.info("✓ Wake word detected! Listening for command...")
+                # Brief pause to let user finish saying wake word and start command
+                time.sleep(0.3)
+                
                 command_result = self._capture_window(
                     self.config.command_window_seconds,
                     stage="command",
-                    prompt="You are capturing a short command following the wake word.",
+                    prompt=None,  # No prompt bias for commands
                 )
                 raw_command, clean_command = (
                     command_result["raw"],
@@ -405,9 +417,10 @@ class VoiceControl:
         audio, rms = audio_payload
         if stage == "wake":
             logger.debug(
-                "Wake window RMS=%.2f threshold=%.2f",
+                "Wake window RMS=%.2f threshold=%.2f (%.1f%%)",
                 rms,
                 self.config.wake_energy_threshold,
+                (rms / self.config.wake_energy_threshold * 100) if self.config.wake_energy_threshold > 0 else 0
             )
             if rms < self.config.wake_energy_threshold:
                 logger.debug("Wake audio below energy threshold; skipping transcription")
@@ -516,45 +529,59 @@ class VoiceControl:
         if not transcript:
             return False
         candidate = transcript.lower().strip()
-        if wake_word in candidate:
+        
+        # Direct exact match (full word boundary)
+        words = re.findall(r'\b[a-z]+\b', candidate)
+        if wake_word in words:
+            logger.debug("Wake word exact match (word boundary) in transcript: '%s'", transcript)
             return True
+        
+        # Check all aliases for exact word matches
         for alias in self.config.wake_aliases:
             alias_norm = alias.lower().strip()
-            if alias_norm and alias_norm in candidate:
+            if alias_norm and alias_norm in words:
                 logger.debug("Wake word alias detected: '%s' in '%s'", alias_norm, transcript)
                 return True
-        tokens = re.findall(r"[a-z]+", candidate)
+        
+        # Fuzzy matching as fallback
         best_ratio = 0.0
-        for token in tokens:
-            ratio = SequenceMatcher(None, wake_word, token).ratio()
-            best_ratio = max(best_ratio, ratio)
+        best_match = ""
+        
+        for word in words:
+            # Check wake word
+            ratio = SequenceMatcher(None, wake_word, word).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_match = word
             if ratio >= self.config.wake_similarity_threshold:
-                logger.debug("Wake word fuzzy match: token='%s' ratio=%.2f", token, ratio)
+                logger.debug("Wake word fuzzy match: word='%s' ratio=%.2f", word, ratio)
                 return True
+            
+            # Check aliases
             for alias in self.config.wake_aliases:
-                alias_ratio = SequenceMatcher(None, alias.lower().strip(), token).ratio()
-                best_ratio = max(best_ratio, alias_ratio)
+                alias_norm = alias.lower().strip()
+                if not alias_norm:
+                    continue
+                alias_ratio = SequenceMatcher(None, alias_norm, word).ratio()
+                if alias_ratio > best_ratio:
+                    best_ratio = alias_ratio
+                    best_match = f"{word}~{alias_norm}"
                 if alias_ratio >= self.config.wake_similarity_threshold:
                     logger.debug(
-                        "Wake alias fuzzy match: alias='%s' token='%s' ratio=%.2f",
+                        "Wake alias fuzzy match: alias='%s' word='%s' ratio=%.2f",
                         alias,
-                        token,
+                        word,
                         alias_ratio,
                     )
                     return True
-        joined = "".join(tokens)
-        if joined:
-            ratios = [SequenceMatcher(None, wake_word, joined).ratio()]
-            ratios.extend(
-                SequenceMatcher(None, alias.lower().strip(), joined).ratio()
-                for alias in self.config.wake_aliases
-            )
-            ratio = max(ratios, default=0.0)
-            best_ratio = max(best_ratio, ratio)
-            if ratio >= self.config.wake_similarity_threshold:
-                logger.debug("Wake word fuzzy match (joined) ratio=%.2f", ratio)
-                return True
-        logger.debug("Wake word not detected; best_ratio=%.2f transcript='%s'", best_ratio, transcript)
+        
+        # Log the best we found even if it didn't match
+        logger.debug(
+            "Wake word not detected; best_ratio=%.2f best_match='%s' transcript='%s'",
+            best_ratio,
+            best_match,
+            transcript
+        )
         return False
 
     def _transcribe_with_retries(
@@ -563,41 +590,73 @@ class VoiceControl:
         attempts = 1
         if stage == "wake":
             attempts = max(1, self.config.wake_retries + 1)
+        elif stage == "command":
+            attempts = max(1, self.config.command_retries + 1)
+        
         best_raw = ""
         best_clean = ""
         best_score = 0.0
         last_raw = ""
         last_clean = ""
+        
         for attempt in range(attempts):
             attempt_prompt = prompt
-            if stage == "wake" and attempt > 0:
-                attempt_prompt = (
-                    f"{self.config.wake_word}. Respond using only the wake word if it was heard."
-                )
+            
+            if stage == "wake" and not attempt_prompt:
+                # For wake detection, use minimal prompting
+                if attempt == 0:
+                    attempt_prompt = None  # No prompt on first try
+                else:
+                    attempt_prompt = f"Wake word: {self.config.wake_word}"
+            elif stage == "command":
+                # For commands, never bias with wake word
+                attempt_prompt = "Transcribe the voice command accurately."
+            
             raw = self.whisper.transcribe(audio_path, attempt_prompt)
             clean = self._clean_transcript(raw, stage)
             last_raw, last_clean = raw, clean
+            
             if raw:
                 logger.debug(
-                    "Transcription attempt %d (stage=%s): '%s'",
+                    "Transcription attempt %d/%d (stage=%s): '%s'",
                     attempt + 1,
+                    attempts,
                     stage,
                     raw,
                 )
+            
             if stage == "wake":
                 score = self._wake_similarity_score(clean or raw)
+                logger.debug("Wake similarity score: %.3f", score)
                 if score > best_score:
                     best_score = score
                     best_raw, best_clean = raw, clean
+                    logger.debug("New best wake transcription (score=%.3f): '%s'", score, raw)
+                
+                # Check if we have a match
                 if self._contains_wake_word(clean) or self._contains_wake_word(raw):
+                    logger.info("✓ Wake word confirmed on attempt %d/%d", attempt + 1, attempts)
                     return raw, clean
             else:
+                # For commands, return first valid transcription
                 if clean:
+                    logger.info("Command transcribed: '%s'", clean)
                     return raw, clean
                 if not best_raw:
                     best_raw, best_clean = raw, clean
+        
+        # Return best match found
         if not best_raw:
             best_raw, best_clean = last_raw, last_clean
+        
+        if stage == "wake" and best_raw:
+            logger.debug(
+                "Best wake transcription after %d attempts (score=%.3f): '%s'",
+                attempts,
+                best_score,
+                best_raw
+            )
+        
         return best_raw or "", best_clean or ""
 
     def _wake_similarity_score(self, transcript: str) -> float:
