@@ -4,7 +4,6 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
-
 def train():
     df = pd.read_csv("dynago/data/normalized.csv")
 

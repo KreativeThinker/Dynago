@@ -15,5 +15,5 @@
     "landmarks": [8, 12, 16],
     "function": [4, 4, 3, 3]
   },
-  "4": { "name": "point", "landmarks": [0, 8], "function": [8, 8, 8, 8] }
+  "4": { "name": "point", "landmarks": [0, 8], "function": [0, 0, 0, 0] }
 }

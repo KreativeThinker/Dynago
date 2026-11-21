@@ -33,3 +33,8 @@ train_static = "dynago.src.train_static:train"
 train_swipe = "dynago.src.train_swipe:train"
 dev = "dynago.src.main:main"
 test = "dynago.src.test:test"
+
+[dependency-groups]
+dev = [
+    "debugpy>=1.8.20",
+]

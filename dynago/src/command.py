@@ -25,11 +25,11 @@ def page_scroll(direction):
 
 
 def adjust_volume(direction):
-    os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {['-5%', '+5%'][direction-2]}")
+    os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {['-5%', '+5%'][direction - 2]}")
 
 
 def adjust_brightness(direction):
-    os.system(f"light {['-U','-A'][direction]} 10")
+    os.system(f"light {['-U', '-A'][direction]} 10")
 
 
 def toggle_scratchpad(_):

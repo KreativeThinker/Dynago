@@ -75,7 +75,12 @@ def calculate_swipe_direction():
 
 
 def test():
-    global tracking_motion, swipe_text, swipe_time, current_tracking_indices, current_static_gesture
+    global \
+        tracking_motion, \
+        swipe_text, \
+        swipe_time, \
+        current_tracking_indices, \
+        current_static_gesture
     cap = cv2.VideoCapture(0)
     frame_count = 0
 

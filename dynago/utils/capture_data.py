@@ -27,7 +27,9 @@ def save_landmark_data(landmarks, gesture_index):
         writer = csv.writer(f)
 
         if not file_exists:
-            header = [f"x{i+1}, y{i+1}, z{i+1}" for i in range(21)] + ["gesture_index"]
+            header = [f"x{i + 1}, y{i + 1}, z{i + 1}" for i in range(21)] + [
+                "gesture_index"
+            ]
             writer.writerow(header)
 
         writer.writerow(data)
